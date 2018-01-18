@@ -1,0 +1,63 @@
+"Phrases"
+{
+	"OfflineBansTitle"
+	{
+		"en"    "Offline Bans"
+		"ru"    "Офлайн бан"
+	}
+	"SelectPlayerTitle"
+	{
+		"en"    "Select Player:"
+		"ru"    "Выберите игрока:"
+	}
+	"SelectTimeTitle"
+	{
+		"en"    "Select Time:"
+		"ru"    "Выберите время:"
+	}
+	"SelectReasonTitle"
+	{
+		"en"    "Select Reason:"
+		"ru"    "Выберите причину:"
+	}
+	"No players history"
+	{
+		"en"    "No players in the history of."
+		"ru"    "Нет игроков в истории."
+	}
+	//------------------------------------------------
+	"Clear history"
+	{
+		"en"    "Clear history"
+		"ru"    "История очищена"
+	}
+	"Failed to ban"
+	{
+		"#format"		"{1:s}"
+		"en"    "Failed to ban {1}"
+		"ru"    "Бан не добавлен {1}"
+	}
+	"Added to ban"
+	{
+		"#format"		"{1:s}"
+		"en"    "Added to ban {1}"
+		"ru"    "Бан добавлен {1}"
+	}
+	"Failed to player"
+	{
+		"#format"		"{1:s}"
+		"en"    "Failed to player {1}"
+		"ru"    "Игрок не найден {1} (он зашёл снова или уже забанен)"
+	}
+	"Own reason"
+	{
+		"#format"		"{1:s}"
+		"en"    "Own reason:({1}). Add"
+		"ru"    "Другая причина:({1}). Добавлена"
+	}
+	"Say reason"
+	{
+		"en"    "Say reason."
+		"ru"    "Напишите в чат свою причину."
+	}
+}
