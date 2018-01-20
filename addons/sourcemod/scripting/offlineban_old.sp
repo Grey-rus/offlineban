@@ -83,8 +83,6 @@ public OnPluginStart()
 		SetFailState("Database failure (%s)", sError);
 
 	CreateOBTables();
-	
-	AutoExecConfig(true, "offlineban");
 }
 
 public OnAllPluginsLoaded()
