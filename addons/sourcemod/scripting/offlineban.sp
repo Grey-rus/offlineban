@@ -25,7 +25,10 @@ int g_iTarget[MAXPLAYERS+1][2];
 #define TID 0  		// id
 #define TTIME 1		// time
 
-int	g_iServerID = -1;
+int	g_iServerID = -1,
+	g_iMaxPlayers,
+	g_iMenuItems,
+	g_iSteamTyp;
 
 Database g_hSQLiteDB = null,
 	g_hDatabase = null;
@@ -40,19 +43,15 @@ char g_sServerIP[32],
 	g_sServerPort[8],
 	g_sLogFile[256],
 	g_sDatabasePrefix[10] = "sb",
+	g_sFormatTime[56],
 	g_sQuery[MAXPLAYERS+1][256];
 	
 bool g_bSourcebans = false,
 	g_bNewConnect[MAXPLAYERS+1],
+	g_bMapClear,
+	g_bDelConPlayers,
+	g_bMenuNewLine,
 	g_bSayReason[MAXPLAYERS+1] = false;
-	
-ConVar g_Cvar_iMaxPlayers,
-	g_Cvar_bMapClear,
-	g_Cvar_bDelConPlayers,
-	g_Cvar_bMenuNewLine,
-	g_Cvar_iMenuItems,
-	g_Cvar_sFormatTime,
-	g_Cvar_iSteamTyp;
 
 SMCParser g_smcConfigParser;
 
@@ -67,7 +66,7 @@ public Plugin myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm 1.7",
-	version = "2.4.8",
+	version = "2.5.0",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -80,21 +79,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart() 
 {
 	LoadTranslations("offlineban.phrases");
-
-	g_Cvar_sFormatTime = CreateConVar("sm_offban_timeformat", "%d.%m|%H:%M", "Формат вывода времени отключения\nOutput Format-off time");
-	g_Cvar_iMaxPlayers = CreateConVar("sm_offban_max_players", "21", "Максимальное количество игроков в меню\nMaximum number of players in menu", 0, true, 1.0, true, 100.0);
-	g_Cvar_bMapClear = CreateConVar("sm_offban_map_clear", "0", "Очищать ли историю игроков при смене карты\nWhether players clean history when the map changes", 0, true, 0.0, true, 1.0);
-	g_Cvar_bDelConPlayers = CreateConVar("sm_offban_del_con_players", "1", "Удалять ли из истории вновь подключившихся игроков\nWhether to delete the history of newly connected players", 0, true, 0.0, true, 1.0);
-	g_Cvar_iMenuItems = CreateConVar("sm_offban_menu_nast", "1", "1. name,time\n2. name,steam\n3. name,steam,time", 0, true, 1.0, true, 3.0);
-	g_Cvar_bMenuNewLine = CreateConVar("sm_offban_menu_newline", "0", "Перенос строк в меню\nLine wrapping to menu", 0, true, 0.0, true, 1.0);
-	g_Cvar_iSteamTyp = CreateConVar("sm_offban_steam_typ", "1", "1. old\n2. new\n3. uint64", 0, true, 1.0, true, 3.0);
 	
 	RegAdminCmd("sm_offban_clear", CommandClearBan, ADMFLAG_ROOT, "Clear history");
-
 	BuildPath(Path_SM, g_sLogFile, sizeof(g_sLogFile), "logs/offlineban.log");
-	
 	HookEvent("player_disconnect", Event_PlayerDisconnect, EventHookMode_Pre);
-	
 	OffMenu();
 
 	char sError[256];
@@ -165,7 +153,7 @@ public void OnMapStart()
 { 
 	ReadConfig();
 	
-	if(g_Cvar_bMapClear.BoolValue) 
+	if(g_bMapClear) 
 		Clear_histories();
 }
 
@@ -203,7 +191,7 @@ public Action OnClientSayCommand(int iClient, const char[] sCommand, const char[
 // удаление игроков вошедших в игру
 public void OnClientPostAdminCheck(int iClient)
 {
-	if (!g_Cvar_bDelConPlayers.BoolValue || !IsClientInGame(iClient) || IsFakeClient(iClient)) 
+	if (!g_bDelConPlayers || !IsClientInGame(iClient) || IsFakeClient(iClient)) 
 		return;
 
 	if(g_bNewConnect[iClient])
@@ -214,7 +202,7 @@ public void OnClientPostAdminCheck(int iClient)
 	char sSteamID[MAX_STEAMID_LENGTH],
 		 sQuery[256];
 	
-	switch(g_Cvar_iSteamTyp.IntValue)
+	switch(g_iSteamTyp)
 	{
 		case 1: GetClientAuthId(iClient, AuthId_Steam2, sSteamID, sizeof(sSteamID));
 		case 2: GetClientAuthId(iClient, AuthId_Steam3, sSteamID, sizeof(sSteamID));
@@ -251,7 +239,7 @@ public void Event_PlayerDisconnect(Event eEvent, const char[] sEvName, bool bDon
 	g_bSayReason[iClient] = false;
 	g_bNewConnect[iClient] = false;
 
-	switch(g_Cvar_iSteamTyp.IntValue)
+	switch(g_iSteamTyp)
 	{
 		case 1: GetClientAuthId(iClient, AuthId_Steam2, sSteamID, sizeof(sSteamID));
 		case 2: GetClientAuthId(iClient, AuthId_Steam3, sSteamID, sizeof(sSteamID));
@@ -268,11 +256,9 @@ public void Event_PlayerDisconnect(Event eEvent, const char[] sEvName, bool bDon
 	g_hSQLiteDB.Query(SQL_Callback_AddClient, sQuery);
 
 #if DEBUG
-	char sTime[64],
-		 sBufer[125];
+	char sTime[64];
 
-	g_Cvar_sFormatTime.GetString(sBufer, sizeof(sBufer));
-	FormatTime(sTime, sizeof(sTime), sBufer, GetTime());
+	FormatTime(sTime, sizeof(sTime), g_sFormatTime, GetTime());
 	LogToFile(g_sLogFile,"New: %s %s - %s ; %s.", sName, sSteamID, sIP, sTime);
 #endif
 }
@@ -327,7 +313,7 @@ void ShowBanList(int iClient)
 	FormatEx(g_sQuery[iClient], sizeof(g_sQuery[]), "\
 			SELECT `id`, `auth`, `name`, `disc_time` \
 			FROM `offlineban` ORDER BY `id` DESC LIMIT %d;",
-		g_Cvar_iMaxPlayers.IntValue);
+		g_iMaxPlayers);
 	g_hSQLiteDB.Query(SendMenuCallback, g_sQuery[iClient], iClient, DBPrio_High);
 }
 
@@ -351,19 +337,17 @@ public void SendMenuCallback(Database db, DBResultSet dbRs, const char[] sError,
 		char sName[MAX_NAME_LENGTH],
 			 sSteamID[MAX_STEAMID_LENGTH],
 			 sID[12],
-			 sTime[64],
-			 sBufer[64];
+			 sTime[64];
 
 		while(dbRs.FetchRow())
 		{
 			dbRs.FetchString(0, sID, sizeof(sID));
 			dbRs.FetchString(1, sSteamID, sizeof(sSteamID));
 			dbRs.FetchString(2, sName, sizeof(sName));
-			g_Cvar_sFormatTime.GetString(sBufer, sizeof(sBufer));
-			FormatTime(sTime, sizeof(sTime), sBufer, dbRs.FetchInt(3));
-			if (g_Cvar_bMenuNewLine.BoolValue)
+			FormatTime(sTime, sizeof(sTime), g_sFormatTime, dbRs.FetchInt(3));
+			if (g_bMenuNewLine)
 			{
-				switch(g_Cvar_iMenuItems.IntValue)
+				switch(g_iMenuItems)
 				{
 					case 1:	FormatEx(sTitle, sizeof(sTitle), "%s\n%s", sName, sTime);
 					case 2: FormatEx(sTitle, sizeof(sTitle), "%s\n%s", sName, sSteamID); 
@@ -372,7 +356,7 @@ public void SendMenuCallback(Database db, DBResultSet dbRs, const char[] sError,
 			}
 			else
 			{
-				switch(g_Cvar_iMenuItems.IntValue)
+				switch(g_iMenuItems)
 				{
 					case 1:	FormatEx(sTitle, sizeof(sTitle), "%s (%s)", sName, sTime);
 					case 2: FormatEx(sTitle, sizeof(sTitle), "%s (%s)", sName, sSteamID); 
@@ -590,7 +574,7 @@ void CreateBanSB(int iClient)
 
 	if (iClient)
 	{
-		switch(g_Cvar_iSteamTyp.IntValue)
+		switch(g_iSteamTyp)
 		{
 			case 1: GetClientAuthId(iClient, AuthId_Steam2, sAdmin_SteamID, sizeof(sAdmin_SteamID));
 			case 2: GetClientAuthId(iClient, AuthId_Steam3, sAdmin_SteamID, sizeof(sAdmin_SteamID));
@@ -759,8 +743,37 @@ public SMCResult KeyValue(SMCParser Smc, const char[] sKey, const char[] sValue,
 				if(g_sDatabasePrefix[0] == '\0')
 					g_sDatabasePrefix = "sb";
 			}
-			if(strcmp("ServerID", sKey, false) == 0)
+			else if(strcmp("ServerID", sKey, false) == 0)
 				g_iServerID = StringToInt(sValue);
+			else if(strcmp("TimeFormat", sKey, false) == 0)
+				strcopy(g_sFormatTime, sizeof(g_sFormatTime), sValue);
+			else if(strcmp("MapClear", sKey, false) == 0)
+			{
+				if(StringToInt(sValue) == 0)
+					g_bMapClear = false;
+				else
+					g_bMapClear = true;
+			}
+			else if(strcmp("MenuNewLine", sKey, false) == 0)
+			{
+				if(StringToInt(sValue) == 0)
+					g_bMenuNewLine = false;
+				else
+					g_bMenuNewLine = true;
+			}
+			else if(strcmp("DelConPlayers", sKey, false) == 0)
+			{
+				if(StringToInt(sValue) == 0)
+					g_bDelConPlayers = false;
+				else
+					g_bDelConPlayers = true;
+			}
+			else if(strcmp("MaxPlayers", sKey, false) == 0)
+				g_iMaxPlayers = StringToInt(sValue);
+			else if(strcmp("MenuNast", sKey, false) == 0)
+				g_iMenuItems = StringToInt(sValue);
+			else if(strcmp("SteamTyp", sKey, false) == 0)
+				g_iSteamTyp = StringToInt(sValue);
 		}
 		case CONFREASON:
 		{

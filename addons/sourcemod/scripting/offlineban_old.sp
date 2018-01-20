@@ -61,35 +61,13 @@ public Plugin:myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm old",
-	version = "2.4.8",
+	version = "2.5.0",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
 public OnPluginStart() 
 {
 	LoadTranslations("offlineban.phrases");
-
-	decl Handle:hCvar;
-	
-	HookConVarChange((hCvar = CreateConVar("sm_offban_timeformat", "%d.%m|%H:%M", "Формат вывода времени отключения\nOutput Format-off time")), FormatTimeChange);
-	GetConVarString(hCvar, g_sFormatTime, sizeof(g_sFormatTime));
-	
-	HookConVarChange((hCvar = CreateConVar("sm_offban_max_stored", "21", "Максимальное количество игроков в истории\nMaximum number of players in history")), MaxStoredPlayersChange);
-	g_iMaxStoredPlayers = GetConVarInt(hCvar);
-	
-	HookConVarChange((hCvar = CreateConVar("sm_offban_map_clear", "0", "Очищать ли историю игроков при смене карты\nWhether players clean history when the map changes")), MapClearChange);
-	g_bMapClear = GetConVarBool(hCvar);
-	
-	HookConVarChange((hCvar = CreateConVar("sm_offban_del_con_players", "1", "Удалять ли из истории вновь подключившихся игроков\nWhether to delete the history of newly connected players")), DelConPlayersChange);
-	g_bDelConPlayers = GetConVarBool(hCvar);
-
-	HookConVarChange((hCvar = CreateConVar("sm_offban_menu_nast", "1", "1. name,time\n2. name,steam\n3. name,steam,time")), FormatItemsChange);
-	g_iMenuItems = GetConVarInt(hCvar);
-	
-	HookConVarChange((hCvar = CreateConVar("sm_offban_menu_newline", "0", "Перенос строк в меню. 0 - выключено")), NewLineChange);
-	g_bMenuNewLine = GetConVarBool(hCvar);
-	
-	CloseHandle(hCvar);
 	
 	RegAdminCmd("sm_offban_clear", CommandClearBan, ADMFLAG_ROOT, "Clear history");
 	RegConsoleCmd("say", ChatHook);
@@ -108,24 +86,6 @@ public OnPluginStart()
 	
 	AutoExecConfig(true, "offlineban");
 }
-
-public FormatTimeChange(Handle:convar, const String:oldValue[], const String:newValue[]) 
-	GetConVarString(convar, g_sFormatTime, sizeof(g_sFormatTime));
-	
-public MaxStoredPlayersChange(Handle:convar, const String:oldValue[], const String:newValue[]) 
-	g_iMaxStoredPlayers = GetConVarInt(convar);
-	
-public MapClearChange(Handle:convar, const String:oldValue[], const String:newValue[]) 
-	g_bMapClear = GetConVarBool(convar);
-	
-public DelConPlayersChange(Handle:convar, const String:oldValue[], const String:newValue[]) 
-	g_bDelConPlayers = GetConVarBool(convar);
-	
-public FormatItemsChange(Handle:convar, const String:oldValue[], const String:newValue[]) 
-	g_iMenuItems = GetConVarInt(convar);
-	
-public NewLineChange(Handle:convar, const String:oldValue[], const String:newValue[]) 
-	g_bMenuNewLine = GetConVarBool(convar);
 
 public OnAllPluginsLoaded()
 {
@@ -735,8 +695,35 @@ public SMCResult:ReadConfig_KeyValue(Handle:smc, const String:sKey[], const Stri
 				if(g_sDatabasePrefix[0] == '\0')
 					g_sDatabasePrefix = "sb";
 			}
-			if(strcmp("ServerID", sKey, false) == 0)
+			else if(strcmp("ServerID", sKey, false) == 0)
 				g_iServerID = StringToInt(sValue);
+			else if(strcmp("TimeFormat", sKey, false) == 0)
+				strcopy(g_sFormatTime, sizeof(g_sFormatTime), sValue);
+			else if(strcmp("MapClear", sKey, false) == 0)
+			{
+				if(StringToInt(sValue) == 0)
+					g_bMapClear = false;
+				else
+					g_bMapClear = true;
+			}
+			else if(strcmp("MenuNewLine", sKey, false) == 0)
+			{
+				if(StringToInt(sValue) == 0)
+					g_bMenuNewLine = false;
+				else
+					g_bMenuNewLine = true;
+			}
+			else if(strcmp("DelConPlayers", sKey, false) == 0)
+			{
+				if(StringToInt(sValue) == 0)
+					g_bDelConPlayers = false;
+				else
+					g_bDelConPlayers = true;
+			}
+			else if(strcmp("MaxPlayers", sKey, false) == 0)
+				g_iMaxStoredPlayers = StringToInt(sValue);
+			else if(strcmp("MenuNast", sKey, false) == 0)
+				g_iMenuItems = StringToInt(sValue);
 		}
 		case CONFREASON:
 		{
