@@ -20,7 +20,7 @@
 - Добавляется приписка в причине бана [Offline Ban]
 
 ### Установка
-- В папке addons\sourcemod\configs\sourcebans меняем конфиг offban.cfg
+- В папке addons\sourcemod\configs меняем конфиг offban.cfg
 
 ### Команды
 | Команда | Аргументы | Требуемый админ флаг | Что делает? |

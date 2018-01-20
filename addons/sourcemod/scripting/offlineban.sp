@@ -692,7 +692,7 @@ void ReadConfig()
 	g_smcConfigParser.OnLeaveSection = EndSection;
 
 	char sConfigFile[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, sConfigFile, sizeof(sConfigFile), "configs/sourcebans/offban.cfg");
+	BuildPath(Path_SM, sConfigFile, sizeof(sConfigFile), "configs/offban.cfg");
 
 	if(g_mReasonMenu != null)
 		g_mReasonMenu.RemoveAllItems();
