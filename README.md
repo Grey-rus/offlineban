@@ -21,7 +21,7 @@
 
 ### Установка
 - В папке addons\sourcemod\configs меняем конфиг offban.cfg
-- В архиве есть файл offlineban_old.sp он для см ниже 1.7
+- В папке addons\sourcemod\scripting есть файл offlineban_old.sp он для см ниже 1.7
 
 ### Команды
 | Команда | Аргументы | Требуемый админ флаг | Что делает? |
