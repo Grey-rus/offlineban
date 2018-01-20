@@ -67,7 +67,7 @@ public Plugin myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm 1.7",
-	version = "2.4.7",
+	version = "2.4.8",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -233,6 +233,9 @@ public void SQL_Callback_DeleteClient(Database db, DBResultSet dbRs, const char[
 public void Event_PlayerDisconnect(Event eEvent, const char[] sEvName, bool bDontBroadcast)
 {
 	int iClient = GetClientOfUserId(eEvent.GetInt("userid"));
+	
+	if (!iClient)
+		return;
 
 	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) 
 		return;
