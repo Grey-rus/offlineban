@@ -61,7 +61,7 @@ public Plugin:myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm old",
-	version = "2.4.7",
+	version = "2.4.8",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -670,10 +670,7 @@ ReadConfig()
 	}
 
 	decl String:sConfigFile[PLATFORM_MAX_PATH];
-	if(g_bSourcebans)
-		BuildPath(Path_SM, sConfigFile, sizeof(sConfigFile), "configs/sourcebans/sourcebans.cfg");
-	else
-		BuildPath(Path_SM, sConfigFile, sizeof(sConfigFile), "configs/sourcebans/offban.cfg");
+	BuildPath(Path_SM, sConfigFile, sizeof(sConfigFile), "configs/sourcebans/offban.cfg");
 
 	if(g_mReasonMenu != INVALID_HANDLE)
 		RemoveAllMenuItems(g_mReasonMenu);
