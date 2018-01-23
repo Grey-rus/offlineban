@@ -22,8 +22,6 @@ new g_iTarget[MAXPLAYERS+1][2];
 #define TID 0  		// id
 #define TTIME 1		// time
 
-new	g_iServerID = -1;
-
 new Handle:g_hSQLiteDB = INVALID_HANDLE,
 	Handle:g_hDatabase = INVALID_HANDLE;
 
@@ -36,14 +34,17 @@ new String:g_sServerIP[32],
 	String:g_sServerPort[8],
 	String:g_sLogFile[256],
 	String:g_sDatabasePrefix[10] = "sb",
+	String:g_sSourcebansName[56] = "sourcebans",
 	String:g_sQuery[MAXPLAYERS+1][256];
 	
 new bool:g_bSourcebans = false,
 	bool:g_bSayReason[MAXPLAYERS+1] = false;
 	
 new String:g_sFormatTime[125],
+	g_iServerID = -1;
 	g_iMaxStoredPlayers,
 	g_iMenuItems,
+	g_iSourcebansExt,
 	bool:g_bMapClear = false,
 	bool:g_bDelConPlayers = false,
 	bool:g_bMenuNewLine = false;
@@ -61,7 +62,7 @@ public Plugin:myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm old",
-	version = "2.5.0",
+	version = "2.5.1",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -75,6 +76,9 @@ public OnPluginStart()
 
 	BuildPath(Path_SM, g_sLogFile, sizeof(g_sLogFile), "logs/offlineban.log");
 	
+	new Handle:topmenu;
+	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
+		OnAdminMenuReady(topmenu);
 	OffMenu();
 
 	new String:sError[256];
@@ -83,11 +87,15 @@ public OnPluginStart()
 		SetFailState("Database failure (%s)", sError);
 
 	CreateOBTables();
+	ReadConfig();
 }
 
 public OnAllPluginsLoaded()
 {
-	if (LibraryExists("sourcebans"))
+	if (g_iSourcebansExt)
+		return;
+
+	if (LibraryExists(g_sSourcebansName))
 	{
 		g_bSourcebans = true;
 		ConectSourceBan();
@@ -101,19 +109,30 @@ public OnAllPluginsLoaded()
 
 public OnLibraryAdded(const String:sName[])
 {
-	if (StrEqual(sName, "sourcebans"))
+	if (!g_iSourcebansExt)
 	{
-		g_bSourcebans = true;
-		ConectSourceBan();
+		if (StrEqual(sName, g_sSourcebansName))
+		{
+			g_bSourcebans = true;
+			ConectSourceBan();
+		}
+	}
+	if (StrEqual(sName, "adminmenu"))
+	{
+		new Handle:topmenu;
+		OnAdminMenuReady(topmenu);
 	}
 }
 
 public OnLibraryRemoved(const String:sName[])
 {
-	if (StrEqual(sName, "sourcebans"))
+	if (!g_iSourcebansExt)
 	{
-		g_bSourcebans = false;
-		PrintToServer("%s Sourcebans OFF", PREFIX);
+		if (StrEqual(sName, g_sSourcebansName))
+		{
+			g_bSourcebans = false;
+			PrintToServer("%s Sourcebans OFF", PREFIX);
+		}
 	}
 	if (StrEqual(sName, "adminmenu")) 
 		g_tmAdminMenu = INVALID_HANDLE;
@@ -686,7 +705,30 @@ public SMCResult:ReadConfig_KeyValue(Handle:smc, const String:sKey[], const Stri
 	{
 		case CONFCONFIG:
 		{
-			if(strcmp("DatabasePrefix", sKey, false) == 0) 
+			if (strcmp("SourcebansExt", sKey, false) == 0)
+			{
+				g_iSourcebansExt = StringToInt(sValue);
+				
+				if (g_iSourcebansExt == 1)
+				{
+					g_bSourcebans = true;
+					if (!g_hDatabase)
+						ConectSourceBan();
+				}
+				else
+				{
+					g_bSourcebans = false;
+					PrintToServer("%s Sourcebans OFF", PREFIX);
+				}
+			}
+			else if(strcmp("SourcebansName", sKey, false) == 0) 
+			{
+				strcopy(g_sSourcebansName, sizeof(g_sSourcebansName), sValue);
+
+				if(g_sSourcebansName[0] == '\0')
+					g_sSourcebansName = "sourcebans";
+			}
+			else if(strcmp("DatabasePrefix", sKey, false) == 0) 
 			{
 				strcopy(g_sDatabasePrefix, sizeof(g_sDatabasePrefix), sValue);
 

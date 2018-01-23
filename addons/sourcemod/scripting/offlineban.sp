@@ -28,7 +28,8 @@ int g_iTarget[MAXPLAYERS+1][2];
 int	g_iServerID = -1,
 	g_iMaxPlayers,
 	g_iMenuItems,
-	g_iSteamTyp;
+	g_iSteamTyp,
+	g_iSourcebansExt;
 
 Database g_hSQLiteDB = null,
 	g_hDatabase = null;
@@ -43,6 +44,7 @@ char g_sServerIP[32],
 	g_sServerPort[8],
 	g_sLogFile[256],
 	g_sDatabasePrefix[10] = "sb",
+	g_sSourcebansName[56] = "sourcebans",
 	g_sFormatTime[56],
 	g_sQuery[MAXPLAYERS+1][256];
 	
@@ -66,7 +68,7 @@ public Plugin myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm 1.7",
-	version = "2.5.0",
+	version = "2.5.1",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -83,6 +85,10 @@ public void OnPluginStart()
 	RegAdminCmd("sm_offban_clear", CommandClearBan, ADMFLAG_ROOT, "Clear history");
 	BuildPath(Path_SM, g_sLogFile, sizeof(g_sLogFile), "logs/offlineban.log");
 	HookEvent("player_disconnect", Event_PlayerDisconnect, EventHookMode_Pre);
+	
+	TopMenu topmenu;
+	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != null))
+		OnAdminMenuReady(topmenu);
 	OffMenu();
 
 	char sError[256];
@@ -91,11 +97,15 @@ public void OnPluginStart()
 		SetFailState("Database failure (%s)", sError);
 
 	CreateOBTables();
+	ReadConfig();
 }
 
 public void OnAllPluginsLoaded()
 {
-	if (LibraryExists("sourcebans"))
+	if (g_iSourcebansExt)
+		return;
+
+	if (LibraryExists(g_sSourcebansName))
 	{
 		g_bSourcebans = true;
 		ConectSourceBan();
@@ -109,19 +119,30 @@ public void OnAllPluginsLoaded()
 
 public void OnLibraryAdded(const char[] sName)
 {
-	if (StrEqual(sName, "sourcebans"))
+	if (!g_iSourcebansExt)
 	{
-		g_bSourcebans = true;
-		ConectSourceBan();
+		if (StrEqual(sName, g_sSourcebansName))
+		{
+			g_bSourcebans = true;
+			ConectSourceBan();
+		}
+	}
+	if (StrEqual(sName, "adminmenu"))
+	{
+		TopMenu topmenu;
+		OnAdminMenuReady(topmenu);
 	}
 }
 
 public void OnLibraryRemoved(const char[] sName)
 {
-	if (StrEqual(sName, "sourcebans"))
+	if (!g_iSourcebansExt)
 	{
-		g_bSourcebans = false;
-		PrintToServer("%s Sourcebans OFF", PREFIX);
+		if (StrEqual(sName, g_sSourcebansName))
+		{
+			g_bSourcebans = false;
+			PrintToServer("%s Sourcebans OFF", PREFIX);
+		}
 	}
 	if (StrEqual(sName, "adminmenu")) 
 		g_tmAdminMenu = null;
@@ -734,7 +755,30 @@ public SMCResult KeyValue(SMCParser Smc, const char[] sKey, const char[] sValue,
 	{
 		case CONFCONFIG:
 		{
-			if(strcmp("DatabasePrefix", sKey, false) == 0) 
+			if (strcmp("SourcebansExt", sKey, false) == 0)
+			{
+				g_iSourcebansExt = StringToInt(sValue);
+				
+				if (g_iSourcebansExt == 1)
+				{
+					g_bSourcebans = true;
+					if (!g_hDatabase)
+						ConectSourceBan();
+				}
+				else
+				{
+					g_bSourcebans = false;
+					PrintToServer("%s Sourcebans OFF", PREFIX);
+				}
+			}
+			else if(strcmp("SourcebansName", sKey, false) == 0) 
+			{
+				strcopy(g_sSourcebansName, sizeof(g_sSourcebansName), sValue);
+
+				if(g_sSourcebansName[0] == '\0')
+					g_sSourcebansName = "sourcebans";
+			}
+			else if(strcmp("DatabasePrefix", sKey, false) == 0) 
 			{
 				strcopy(g_sDatabasePrefix, sizeof(g_sDatabasePrefix), sValue);
 
