@@ -68,7 +68,7 @@ public Plugin myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm 1.7",
-	version = "2.5.1",
+	version = "2.5.2",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -765,7 +765,7 @@ public SMCResult KeyValue(SMCParser Smc, const char[] sKey, const char[] sValue,
 					if (!g_hDatabase)
 						ConectSourceBan();
 				}
-				else
+				else if (g_iSourcebansExt == 2)
 				{
 					g_bSourcebans = false;
 					PrintToServer("%s Sourcebans OFF", PREFIX);
