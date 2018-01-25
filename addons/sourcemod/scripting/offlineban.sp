@@ -4,6 +4,10 @@
 #include <sourcemod>
 #include <offlineban>
 #include <sdktools>
+
+#undef REQUIRE_EXTENSIONS
+#include <SteamWorks>
+
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 
@@ -43,6 +47,7 @@ Menu g_mReasonMenu,
 char g_sServerIP[32], 
 	g_sServerPort[8],
 	g_sLogFile[256],
+	g_sFlag[12],
 	g_sDatabasePrefix[10] = "sb",
 	g_sSourcebansName[56] = "sourcebans",
 	g_sFormatTime[56],
@@ -63,12 +68,14 @@ int g_iConfigState;
 #define CONFREASON	3
 #define	CONFHACKING	4
 
+#define	OFFVERSION 	"2.5.3"
+
 public Plugin myinfo = 
 {
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm 1.7",
-	version = "2.5.2",
+	version = OFFVERSION,
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -174,6 +181,25 @@ public void OnMapStart()
 	
 	if(g_bMapClear) 
 		Clear_histories();
+	
+	// Отправка статы
+	if (LibraryExists("SteamWorks"))
+	{
+		int iIp[4];
+		if (SteamWorks_GetPublicIP(iIp))
+		{
+			PrintToServer("%sStatistics ON", PREFIX);
+			char cBuffer[256];
+			FormatEx(cBuffer, sizeof(cBuffer), "http://stats.scriptplugs.info/add_server.php");
+			Handle hndl = SteamWorks_CreateHTTPRequest(k_EHTTPMethodPOST, cBuffer);
+			FormatEx(cBuffer, sizeof(cBuffer), "key=c91a0662f2176ade13d8f585b578811a&ip=%d.%d.%d.%d&port=%d&version=%s", iIp[0], iIp[1], iIp[2], iIp[3], FindConVar("hostport").IntValue, OFFVERSION);
+			SteamWorks_SetHTTPRequestRawPostBody(hndl, "application/x-www-form-urlencoded", cBuffer, sizeof(cBuffer));
+			SteamWorks_SendHTTPRequest(hndl);
+			delete hndl;
+		}
+	}
+	else
+		PrintToServer("%sStatistics OFF", PREFIX);
 }
 
 void Clear_histories()
@@ -246,17 +272,20 @@ public void Event_PlayerDisconnect(Event eEvent, const char[] sEvName, bool bDon
 
 	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) 
 		return;
+	
+	g_bSayReason[iClient] = false;
+	g_bNewConnect[iClient] = false;
 
-	if (GetUserAdmin(iClient) != INVALID_ADMIN_ID) 
-		return;
+	if (g_sFlag[0])
+	{
+		if (GetUserFlagBits(iClient) & ReadFlagString(g_sFlag)) 
+			return;
+	}
 
 	char sSteamID[MAX_STEAMID_LENGTH],
 		 sName[MAX_NAME_LENGTH],
 		 sEName[MAX_NAME_LENGTH*2+1],
 		 sIP[MAX_IP_LENGTH];
-		 
-	g_bSayReason[iClient] = false;
-	g_bNewConnect[iClient] = false;
 
 	switch(g_iSteamTyp)
 	{
@@ -787,6 +816,8 @@ public SMCResult KeyValue(SMCParser Smc, const char[] sKey, const char[] sValue,
 			}
 			else if(strcmp("ServerID", sKey, false) == 0)
 				g_iServerID = StringToInt(sValue);
+			else if(strcmp("ImmuneAdminFlag", sKey, false) == 0)
+				strcopy(g_sFlag, sizeof(g_sFlag), sValue);
 			else if(strcmp("TimeFormat", sKey, false) == 0)
 				strcopy(g_sFormatTime, sizeof(g_sFormatTime), sValue);
 			else if(strcmp("MapClear", sKey, false) == 0)

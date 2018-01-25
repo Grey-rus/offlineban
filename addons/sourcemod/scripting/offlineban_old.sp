@@ -33,6 +33,7 @@ new Handle:g_tmAdminMenu,
 new String:g_sServerIP[32], 
 	String:g_sServerPort[8],
 	String:g_sLogFile[256],
+	String:g_sFlag[12],
 	String:g_sDatabasePrefix[10] = "sb",
 	String:g_sSourcebansName[56] = "sourcebans",
 	String:g_sQuery[MAXPLAYERS+1][256];
@@ -62,7 +63,7 @@ public Plugin:myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm old",
-	version = "2.5.2",
+	version = "2.5.3",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -225,8 +226,11 @@ public OnClientDisconnect(iClient)
 	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) 
 		return;
 
-	if (GetUserAdmin(iClient) != INVALID_ADMIN_ID) 
-		return;
+	if (g_sFlag[0])
+	{
+		if (GetUserFlagBits(iClient) & ReadFlagString(g_sFlag)) 
+			return;
+	}
 
 	decl String:sSteamID[MAX_STEAMID_LENGTH],
 		 String:sName[MAX_NAME_LENGTH],
@@ -737,6 +741,8 @@ public SMCResult:ReadConfig_KeyValue(Handle:smc, const String:sKey[], const Stri
 			}
 			else if(strcmp("ServerID", sKey, false) == 0)
 				g_iServerID = StringToInt(sValue);
+			else if(strcmp("ImmuneAdminFlag", sKey, false) == 0)
+				strcopy(g_sFlag, sizeof(g_sFlag), sValue);
 			else if(strcmp("TimeFormat", sKey, false) == 0)
 				strcopy(g_sFormatTime, sizeof(g_sFormatTime), sValue);
 			else if(strcmp("MapClear", sKey, false) == 0)
