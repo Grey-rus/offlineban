@@ -63,7 +63,7 @@ public Plugin:myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm old",
-	version = "2.5.3",
+	version = "2.5.4",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -121,7 +121,8 @@ public OnLibraryAdded(const String:sName[])
 	if (StrEqual(sName, "adminmenu"))
 	{
 		new Handle:topmenu;
-		OnAdminMenuReady(topmenu);
+		if ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE)
+			OnAdminMenuReady(topmenu);
 	}
 }
 

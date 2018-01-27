@@ -68,7 +68,7 @@ int g_iConfigState;
 #define CONFREASON	3
 #define	CONFHACKING	4
 
-#define	OFFVERSION 	"2.5.3"
+#define	OFFVERSION 	"2.5.4"
 
 public Plugin myinfo = 
 {
@@ -137,7 +137,8 @@ public void OnLibraryAdded(const char[] sName)
 	if (StrEqual(sName, "adminmenu"))
 	{
 		TopMenu topmenu;
-		OnAdminMenuReady(topmenu);
+		if ((topmenu = GetAdminTopMenu()) != null)
+			OnAdminMenuReady(topmenu);
 	}
 }
 
