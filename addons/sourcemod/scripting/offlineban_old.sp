@@ -63,7 +63,7 @@ public Plugin:myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm old",
-	version = "2.5.4",
+	version = "2.5.5",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -227,11 +227,8 @@ public OnClientDisconnect(iClient)
 	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) 
 		return;
 
-	if (g_sFlag[0])
-	{
-		if (GetUserFlagBits(iClient) & ReadFlagString(g_sFlag)) 
-			return;
-	}
+	if (GetUserFlagBits(iClient) & ReadFlagString(g_sFlag) | ADMFLAG_ROOT)) 
+		return;
 
 	decl String:sSteamID[MAX_STEAMID_LENGTH],
 		 String:sName[MAX_NAME_LENGTH],
@@ -603,13 +600,13 @@ public VerifyInsert(Handle:db, Handle:dbRs, const String:sError[], any:iClient)
 	{
 		LogToFile(g_sLogFile, "Verify Insert Query Failed: %s", sError);
 		if (iClient > 0)
-			PrintToChat(iClient, "%T", "Failed to ban", iClient, g_sTarget[iClient][TNAME]);
+			PrintToChat(iClient, "%T %T", "prifix", iClient, "Failed to ban", iClient, g_sTarget[iClient][TNAME]);
 	}
 	else
 	{
 		decl String:sQuery[125];
 		if (iClient > 0)
-			PrintToChat(iClient, "%T", "Added to ban", iClient, g_sTarget[iClient][TNAME]);
+			PrintToChat(iClient, "%T %T", "prifix", iClient, "Added to ban", iClient, g_sTarget[iClient][TNAME]);
 		FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `offlineban` WHERE `id` = '%i';", g_iTarget[iClient][TID]);
 		SQL_TQuery(g_hSQLiteDB, SQL_Callback_DeleteClient, sQuery);
 	}
@@ -618,9 +615,9 @@ public VerifyInsert(Handle:db, Handle:dbRs, const String:sError[], any:iClient)
 CreateBan(iClient)
 {
 	if(BanIdentity(g_sTarget[iClient][TSTEAMID], g_iTarget[iClient][TTIME], BANFLAG_AUTHID, g_sTarget[iClient][TREASON], ""))
-		PrintToChat(iClient, "%T", "Added to ban", iClient, g_sTarget[iClient][TNAME]);
+		PrintToChat(iClient, "%T %T", "prifix", iClient, "Added to ban", iClient, g_sTarget[iClient][TNAME]);
 	else
-		PrintToChat(iClient, "%T", "Failed to ban", iClient, g_sTarget[iClient][TNAME]);
+		PrintToChat(iClient, "%T %T", "prifix", iClient, "Failed to ban", iClient, g_sTarget[iClient][TNAME]);
 	LogAction(iClient, -1, "\"%L\" banned \"%s (%s IP_%s)\" (minutes \"%d\") (reason \"%s\")", iClient, g_sTarget[iClient][TNAME], g_sTarget[iClient][TSTEAMID], 
 							g_sTarget[iClient][TIP], g_iTarget[iClient][TTIME], g_sTarget[iClient][TREASON]);
 }
