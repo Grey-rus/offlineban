@@ -68,7 +68,7 @@ int g_iConfigState;
 #define CONFREASON	3
 #define	CONFHACKING	4
 
-#define	OFFVERSION 	"2.5.4"
+#define	OFFVERSION 	"2.5.5"
 
 public Plugin myinfo = 
 {
@@ -277,11 +277,8 @@ public void Event_PlayerDisconnect(Event eEvent, const char[] sEvName, bool bDon
 	g_bSayReason[iClient] = false;
 	g_bNewConnect[iClient] = false;
 
-	if (g_sFlag[0])
-	{
-		if (GetUserFlagBits(iClient) & ReadFlagString(g_sFlag)) 
-			return;
-	}
+	if (GetUserFlagBits(iClient) & (ReadFlagString(g_sFlag) | ADMFLAG_ROOT)) 
+		return;
 
 	char sSteamID[MAX_STEAMID_LENGTH],
 		 sName[MAX_NAME_LENGTH],
@@ -908,9 +905,9 @@ void PrintToChat2(int iClient, const char[] sMesag, any ...)
 		ReplaceString(sBufer, sizeof(sBufer), sColorT[i], sColorC[i]);
 
 	if (GetUserMessageType() == UM_Protobuf)
-		PrintToChat(iClient, " \x01%s %s", PREFIX, sBufer);
+		PrintToChat(iClient, " \x01%T %s.", "prifix", iClient, sBufer);
 	else
-		PrintToChat(iClient, "\x01%s %s", PREFIX, sBufer);
+		PrintToChat(iClient, "\x01%T %s.", "prifix", iClient, sBufer);
 }
 
 public int Native_OffBan(Handle plugin, int numParams)
