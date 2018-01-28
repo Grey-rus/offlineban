@@ -73,7 +73,8 @@
 	}
 	"prifix"
 	{
-		"en"			"[Offline Ban]"
-		"ru"			"[Offline Ban]"
+		"en"	"[Offline Ban]"
+		"ru"	"[Offline Ban]"
+		"ua"	"[Offline Ban]"
 	}
 }
