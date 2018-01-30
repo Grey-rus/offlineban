@@ -42,7 +42,7 @@ new bool:g_bSourcebans = false,
 	bool:g_bSayReason[MAXPLAYERS+1] = false;
 	
 new String:g_sFormatTime[125],
-	g_iServerID = -1;
+	g_iServerID = -1,
 	g_iMaxStoredPlayers,
 	g_iMenuItems,
 	g_iSourcebansExt,
@@ -227,7 +227,7 @@ public OnClientDisconnect(iClient)
 	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) 
 		return;
 
-	if (GetUserFlagBits(iClient) & ReadFlagString(g_sFlag) | ADMFLAG_ROOT)) 
+	if (GetUserFlagBits(iClient) & (ReadFlagString(g_sFlag) | ADMFLAG_ROOT))
 		return;
 
 	decl String:sSteamID[MAX_STEAMID_LENGTH],
