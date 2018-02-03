@@ -63,7 +63,7 @@ public Plugin:myinfo =
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm old",
-	version = "2.5.5",
+	version = "2.5.6",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 

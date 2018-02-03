@@ -5,9 +5,6 @@
 #include <offlineban>
 #include <sdktools>
 
-#undef REQUIRE_EXTENSIONS
-#include <SteamWorks>
-
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 
@@ -68,14 +65,12 @@ int g_iConfigState;
 #define CONFREASON	3
 #define	CONFHACKING	4
 
-#define	OFFVERSION 	"2.5.5"
-
 public Plugin myinfo = 
 {
 	name = "Offline Ban list",
 	author = "Grey™ & R1KO",
 	description = "For to sm 1.7",
-	version = OFFVERSION,
+	version = "2.5.6",
 	url = "hlmod.ru Skype: wolf-1-ser"
 };
 
@@ -182,25 +177,6 @@ public void OnMapStart()
 	
 	if(g_bMapClear) 
 		Clear_histories();
-	
-	// Отправка статы
-	if (LibraryExists("SteamWorks"))
-	{
-		int iIp[4];
-		if (SteamWorks_GetPublicIP(iIp))
-		{
-			PrintToServer("%sStatistics ON", PREFIX);
-			char cBuffer[256];
-			FormatEx(cBuffer, sizeof(cBuffer), "http://stats.scriptplugs.info/add_server.php");
-			Handle hndl = SteamWorks_CreateHTTPRequest(k_EHTTPMethodPOST, cBuffer);
-			FormatEx(cBuffer, sizeof(cBuffer), "key=c91a0662f2176ade13d8f585b578811a&ip=%d.%d.%d.%d&port=%d&version=%s", iIp[0], iIp[1], iIp[2], iIp[3], FindConVar("hostport").IntValue, OFFVERSION);
-			SteamWorks_SetHTTPRequestRawPostBody(hndl, "application/x-www-form-urlencoded", cBuffer, sizeof(cBuffer));
-			SteamWorks_SendHTTPRequest(hndl);
-			delete hndl;
-		}
-	}
-	else
-		PrintToServer("%sStatistics OFF", PREFIX);
 }
 
 void Clear_histories()
